@@ -1,0 +1,77 @@
+#!/bin/bash
+<%
+  def discover_external_ip
+    networks = spec.networks.marshal_dump
+    _, network = networks.find do |_name, network_spec|
+      network_spec.default
+    end
+    if !network
+      _, network = networks.first
+    end
+    if !network
+      raise "Could not determine IP via network spec: #{networks}"
+    end
+    network.ip
+  end
+  my_ip = discover_external_ip
+%>
+set -u # report the usage of uninitialized variables
+
+JOB_NAME=logstash_redis_check
+
+riemann_state="ok"
+riemann_msg=""
+riemann_metric=1.0
+
+function write_msg {
+  riemann_msg="$1"
+  if [ "$#" -ge 2 ]; then
+    riemann_state="$2"
+  fi
+
+  if [ "$#" -ge 3 ]; then
+    riemann_metric=$3
+  fi
+  date=$(date -u +"%Y-%m-%d %H:%M:%SZ")
+  echo -e "[${date}] $1"
+}
+
+function redirect_output {
+  log_dir=$1
+  prefix=$2
+
+  mkdir -p $log_dir
+  chown -R vcap:vcap $log_dir
+
+  exec 1>> $log_dir/$prefix.stdout.log
+  exec 2>> $log_dir/$prefix.stderr.log
+}
+
+log_dir=/var/vcap/sys/log/$JOB_NAME
+redirect_output $log_dir $JOB_NAME
+
+write_msg "--- Starting job ---"
+write_msg "Indexer IP: <%= my_ip %>"
+write_msg "Redis IP: <%= p('redis.host') %>"
+write_msg "Redis port: <%= p('redis.port') %>"
+
+clients=`(echo -en "CLIENT LIST\r\n"; sleep 1) | nc -w <%= p('redis.timeout') %> <%= p('redis.host') %> <%= p('redis.port') %>`
+if [ $? -eq 1 ]; then
+  write_msg "Logstash indexer could not connect to redis" "critical" 0.0
+else
+  write_msg "Client list:\n`echo "$clients" | grep -E "<%= my_ip %>:([0-9])+"`"
+  count=`echo "$clients" | grep "blpop" | grep -c "<%= my_ip %>"`
+  if [ $count -lt 1 ]; then
+    write_msg "Logstash indexer redis connection lost, restarting service" "warning" 0.0
+    /var/vcap/bosh/bin/monit restart logstash-indexer
+  else
+    write_msg "Logstash connection to redis seems OK" "ok" 1.0
+  fi
+fi
+
+<% if_p("riemann.host") do %>
+write_msg "Sending data to riemann: [$riemann_metric - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
+/var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost $JOB_NAME -eventService "<%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>"
+<% end %>
+
+write_msg "--- Stopping job ---"

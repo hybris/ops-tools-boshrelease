@@ -1,0 +1,11 @@
+---
+name: nf_conntrack_max
+
+description: "job created to increase the nf_conntrack_max value on some CF components"
+
+templates:
+  nf_conntrack_max_ctl.erb: bin/nf_conntrack_max_ctl
+
+packages: []
+
+properties: {}

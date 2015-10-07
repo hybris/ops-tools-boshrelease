@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+RUN_DIR=/var/vcap/sys/run/nf_conntrack_max
+LOG_DIR=/var/vcap/sys/log/nf_conntrack_max
+
+case $1 in
+
+  start)
+    mkdir -p $LOG_DIR
+    chown -R vcap:vcap $LOG_DIR
+
+    echo "Starting nf_conntrack_max file check at "`date` >> ${LOG_DIR}/nf_conntrack_max.log
+    ;;
+
+  stop)
+
+    echo "Stopping nf_conntrack_max file check at "`date` >> ${LOG_DIR}/nf_conntrack_max.log
+    ;;
+
+  *)
+    echo "Usage: nf_conntrack_max_ctl {start|stop}" ;;
+
+esac

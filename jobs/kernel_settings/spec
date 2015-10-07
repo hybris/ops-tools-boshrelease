@@ -1,0 +1,28 @@
+---
+name: kernel_settings
+description: "Tweak some settings to let tcp connection in keep alive mode"
+templates:
+  kernel_settings_ctl.sh.erb: bin/kernel_settings_ctl
+  kernel_settings_setup.sh.erb: bin/kernel_settings_setup.sh
+  kernel_settings_cron.erb: config/kernel_settings_cron
+
+packages: []
+properties:
+  cron.schedule:
+    description: "Schedule for the job (in cron format)"
+    default: "0 * * * *"
+  ipv4.tcp.recycle:
+    description: "Enable fast recycling TIME-WAIT sockets"
+    default: 0
+  ipv4.tcp.reuse:
+    description: "This allows reusing sockets in TIME_WAIT state for new connections when it is safe from protocol viewpoint"
+    default: 0
+  ipv4.tcp.timeout:
+    description: "Time to hold socket in state FIN-WAIT"
+    default: 60
+  core.somaxconn:
+    description: "Number of incoming connections"
+    default: 128
+  system.ulimit:
+    description: "Limit the use of system-wide resources"
+    default: 1024

@@ -1,0 +1,5 @@
+check process logstash_redis_check
+  with pidfile /var/vcap/sys/run/logstash_redis_check/logstash_redis_check.pid
+  start program "/var/vcap/jobs/logstash_redis_check/bin/ctl start"
+  stop program "/var/vcap/jobs/logstash_redis_check/bin/ctl stop"
+  group vcap

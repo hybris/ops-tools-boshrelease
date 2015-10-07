@@ -1,0 +1,54 @@
+#!/bin/bash
+
+kernel_network_path="/proc/sys/net/"
+
+# Read desired configuration
+kernel_parameters=(
+  tcp_tw_reuse,<%= p('ipv4.tcp.reuse') %>,ipv4,net.ipv4.tcp_tw_reuse
+  tcp_tw_recycle,<%= p('ipv4.tcp.recycle') %>,ipv4,net.ipv4.tcp_tw_recycle
+  tcp_fin_timeout,<%= p('ipv4.tcp.timeout') %>,ipv4,net.ipv4.tcp_fin_timeout
+  somaxconn,<%= p('core.somaxconn') %>,core,net.core.somaxconn
+)
+
+# Validate setting
+setting_validation() {
+   setting_name=`echo $1 | cut -d ',' -f1`
+   setting_value=`echo $1 | cut -d ',' -f2`
+   setting_group=`echo $1 | cut -d ',' -f3`
+   actual_value=`cat ${kernel_network_path}/${setting_group}/${setting_name}`
+
+   if [ $actual_value == $setting_value ]
+   then
+     echo "ok"
+   else
+     echo "change_required"
+   fi
+}
+
+# Set setting to desired value
+set_kernel_setting() {
+  setting_value=`echo $1 | cut -d ',' -f2`
+  setting_kernel_name=`echo $1 | cut -d ',' -f4`
+
+  echo "Setting ${setting_kernel_name} to ${setting_value}"
+  sudo sysctl -w ${setting_kernel_name}=${setting_value}
+}
+
+# Execution
+for setting in "${kernel_parameters[@]}"
+do
+ action="$(setting_validation $setting)"
+ if [ "$action" == "change_required" ]
+ then
+   set_kernel_setting $setting
+ fi
+done
+
+# Ulimit setup
+desired_ulimit="<%= p('system.ulimit') %>"
+actual_ulimit=`ulimit -n`
+if [ "$desired_ulimit" != "$actual_ulimit" ]
+then
+  echo "Ulimit need to be changed to: $desired_ulimit"
+  ulimit -n ${desired_ulimit}
+fi

@@ -1,0 +1,8 @@
+---
+name: raidman
+
+dependencies:
+ - golang
+
+files:
+ - raidman/**/*

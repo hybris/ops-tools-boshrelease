@@ -1,0 +1,14 @@
+---
+meta:
+  environment: NAME
+  dns_root: microbosh
+  security_groups:
+    - ops-tools
+  stemcell:
+    name: STEMCELL
+
+director_uuid: PLACEHOLDER-DIRECTOR-UUID
+
+releases:
+  - name: ops-tools
+    version: latest

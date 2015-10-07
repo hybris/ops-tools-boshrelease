@@ -1,0 +1,31 @@
+---
+name: logstash_redis_check
+
+description: "Check whenever logstash indexers loose connection to redis, then restart logstash service"
+
+templates:
+  ctl.erb: bin/ctl
+  logstash_redis_check.erb: bin/logstash_redis_check
+  logstash_redis_check.cron.erb: config/logstash_redis_check.cron
+
+packages:
+  - golang
+  - raidman
+
+properties:
+  cron.schedule:
+    description: "Schedule for the job (in cron format)"
+    default: "0 * * * *"
+  redis.host:
+    description: "Redis host"
+  redis.port:
+    description: "Redis port"
+    default: 6379
+  redis.timeout:
+    description: "Timeout in seconds to connect to redis"
+    default: 15
+  riemann.host:
+    description: "Riemann host use to sent alerts"
+  riemann.suffix:
+    description: "Suffix for the riemann host"
+    default: operational-tools

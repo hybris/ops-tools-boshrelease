@@ -1,0 +1,5 @@
+check process kernel_settings
+  with pidfile /var/vcap/sys/run/kernel_settings/kernel_settings.pid
+  start program "/var/vcap/jobs/kernel_settings/bin/kernel_settings_ctl start"
+  stop program "/var/vcap/jobs/kernel_settings/bin/kernel_settings_ctl stop"
+  group vcap
