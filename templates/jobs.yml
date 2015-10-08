@@ -11,7 +11,7 @@ update:
 jobs:
   - name: just_install_packages
     templates:
-    - name: just_install_packages
+    - name: nf_conntrack_max 
       release: ops-tools
     instances: 1
     persistent_disk: 0
