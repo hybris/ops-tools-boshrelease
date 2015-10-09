@@ -2,4 +2,4 @@ check file nf_conntrack_max with path /proc/sys/net/netfilter/nf_conntrack_max
   start program "/var/vcap/jobs/nf_conntrack_max/bin/nf_conntrack_max_ctl start"
   stop program "/var/vcap/jobs/nf_conntrack_max/bin/nf_conntrack_max_ctl stop"
   group vcap
-  if failed md5 checksum expect p('nf_conntrack.md5') then exec "/bin/bash -c '/bin/echo p('nf_conntrack.max') > /proc/sys/net/netfilter/nf_conntrack_max'"
+  if failed md5 checksum expect <%= p('nf_conntrack.md5') %> then exec "/bin/bash -c '/bin/echo <%=  p('nf_conntrack.max') %> > /proc/sys/net/netfilter/nf_conntrack_max'"
