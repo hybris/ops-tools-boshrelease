@@ -1,0 +1,28 @@
+---
+name: nf_conntrack
+
+description: "job created to manage nf_conntrack settings on some CF components"
+
+templates:
+  nf_conntrack_ctl.erb: bin/nf_conntrack_ctl
+  nf_conntrack.sh.erb: bin/nf_conntrack.sh
+  nf_conntrack_cron.erb: config/nf_conntrack_cron
+
+packages: []
+
+properties:
+  nf_conntrack.max:
+    description: Value of nf_conntrack_max
+    default: 256000
+  nf_conntrack.generic_timeout:
+    description: Value of nf_conntrack_generic_timeout
+    default: 60
+  nf_conntrack.tcp_timeout_established:
+    description: Value of nf_conntrack_generic_timeout
+    default: 54000
+  nf_conntrack.hashsize:
+    description: Size of the iptables hash size for nf_conntrack (should be set to nf_conntrack_max / 4)
+    default: 64000
+  nf_conntrack.cron_schedule:
+    description: "Schedule for the job (in cron format)"
+    default: "0 * * * *"

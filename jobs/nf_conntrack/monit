@@ -1,0 +1,5 @@
+check process nf_conntrack
+  with pidfile /var/vcap/sys/run/nf_conntrack/nf_conntrack.pid
+  start program "/var/vcap/jobs/nf_conntrack/bin/nf_conntrack_ctl start"
+  stop program "/var/vcap/jobs/nf_conntrack/bin/nf_conntrack_ctl stop"
+  group vcap
