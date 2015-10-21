@@ -1,12 +1,27 @@
-#!/bin/sh
+#!/bin/bash
 
 ##### nf_conntrack_settings #####
+JOB_NAME="nf_conntrack"
 nf_conntrack_settings=(
   nf_conntrack_max,/proc/sys/net/netfilter/nf_conntrack_max,<%= p("nf_conntrack.max") %>
   nf_conntrack_generic_timeout,/proc/sys/net/netfilter/nf_conntrack_generic_timeout,<%= p("nf_conntrack.generic_timeout") %>
   nf_conntrack_tcp_timeout_established,/proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established,<%= p("nf_conntrack.tcp_timeout_established") %>
   nf_conntrack_hashsize,/sys/module/nf_conntrack/parameters/hashsize,<%= p("nf_conntrack.hashsize") %>
 )
+
+##### Logging setup #####
+function redirect_output {
+  log_dir=$1
+  prefix=$2
+
+  mkdir -p $log_dir
+  chown -R vcap:vcap $log_dir
+
+  exec 1>> $log_dir/$prefix.stdout.log
+  exec 2>> $log_dir/$prefix.stderr.log
+}
+log_dir=/var/vcap/sys/log/$JOB_NAME
+redirect_output $log_dir $JOB_NAME
 
 ##### Sending metric to Riemann #####
 function send_metric_to_graphite {
@@ -35,7 +50,6 @@ function get_setting_value {
     write_to_logs "$parameter_name: $parameter_actual_value"
   else
     write_to_logs "ERROR: $parameter_location_file file does not exists"
-    return 1
   fi
 }
 
@@ -66,9 +80,41 @@ function fix_setting_value {
         send_metric_to_graphite $parameter_name $parameter_desired_value
       fi
   else
-    write_to_logs "ERROR: $parameter_location_file does not exists"
-    exit 1
+    write_to_logs "ERROR: $parameter_location_file file does not exists"
   fi
+}
+
+function nf_conntrack_max_check {
+  riemann_state="ok"
+  riemann_msg=""
+  riemann_metric=0
+
+  if [ ! -f /proc/sys/net/netfilter/nf_conntrack_count ] || [ ! -f /proc/sys/net/netfilter/nf_conntrack_max ]; then
+  	write_msg "CRITICAL! NF Conntrack is disabled!" "critical" 0
+  else
+  	nf_current=$(cat /proc/sys/net/netfilter/nf_conntrack_count || echo "not_there")
+  	nf_max=$(cat /proc/sys/net/netfilter/nf_conntrack_max || echo "not_there")
+  	nf_ratio=<%= p('nf_conntrack.check_ratio') %>
+    nf_calc=$(bc -l <<< "scale=10; $nf_ratio * $nf_max")
+    nf_status=$(bc -l <<< "$nf_current>$nf_calc")
+
+    if [ $nf_status -eq 0 ]; then
+            write_to_logs "NF Conntrack is within limits: $nf_current < $nf_max"
+            riemann_msg="NF Conntrack is within limits"
+            riemann_state="ok"
+            riemann_metric=$nf_current
+    else
+            write_to_logs "CRITICAL! NF Conntrack is above limits! $nf_current > $nf_ma"
+            riemann_msg="CRITICAL! NF Conntrack is above limits!"
+            riemann_state="critical"
+            riemann_metric=$nf_current
+    fi
+  fi
+
+  <% if_p("riemann.host") do %>
+  write_to_logs "Sending data to riemann: [$riemann_metric - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
+  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost $JOB_NAME -eventService "<%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>.nf-conntack-max"
+  <% end %>
 }
 
 ##### Main ######
@@ -82,5 +128,8 @@ do
   get_setting_value $setting_name $setting_location
   fix_setting_value $setting_name $setting_location $setting_value
 done
+
+nf_conntrack_max_check
+
 write_to_logs "------------------------------------------------"
 write_to_logs " "

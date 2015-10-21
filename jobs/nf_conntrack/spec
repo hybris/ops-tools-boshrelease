@@ -8,7 +8,9 @@ templates:
   nf_conntrack.sh.erb: bin/nf_conntrack.sh
   nf_conntrack_cron.erb: config/nf_conntrack_cron
 
-packages: []
+packages:
+  - golang
+  - raidman
 
 properties:
   nf_conntrack.max:
@@ -25,4 +27,14 @@ properties:
     default: 64000
   nf_conntrack.cron_schedule:
     description: "Schedule for the job (in cron format)"
-    default: "0 * * * *"
+    default: "* * * * *"
+  riemann.host:
+    description: "Riemann host use to sent metrics"
+  riemann.port:
+    description: "Riemann port use to sent metrics"
+  riemann.suffix:
+    description: "Suffix for the riemann host"
+    default: operational-tools
+  nf_conntrack.check_ratio:
+    description: "Ratio used for the alert."
+    default: 0.9
