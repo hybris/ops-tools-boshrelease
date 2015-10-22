@@ -20,8 +20,7 @@ jobs:
 
 networks: (( merge ))
 
-properties: {
+properties:
    riemann:
     host: localhost
     port: 2003
-  }
