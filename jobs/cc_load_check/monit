@@ -1,0 +1,5 @@
+check process cc_load_check
+  with pidfile /var/vcap/sys/run/cc_load_check/cc_load_check.pid
+  start program "/var/vcap/jobs/cc_load_check/bin/ctl start"
+  stop program "/var/vcap/jobs/cc_load_check/bin/ctl stop"
+  group vcap

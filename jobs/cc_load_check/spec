@@ -1,0 +1,25 @@
+---
+name: cc_load_check
+
+description: "job to check cloudcontroller load"
+
+templates:
+  ctl.erb: bin/ctl
+  cc_load_check.erb: bin/cc_load_check
+  cc_load_check.cron.erb: config/cc_load_check.cron
+
+packages:
+  - golang
+  - raidman
+
+properties:
+  cc_load_check.cron_schedule:
+    description: "Schedule for the job (in cron format)"
+    default: "*/5 * * * *"
+  riemann.host:
+    description: "Riemann host use to sent metrics"
+  riemann.port:
+    description: "Riemann port use to sent metrics"
+  riemann.suffix:
+    description: "Suffix for the riemann host"
+    default: operational-tools

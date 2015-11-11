@@ -1,0 +1,61 @@
+#!/bin/bash
+
+set -u # report the usage of uninitialized variables
+
+JOB_NAME=cc_load_check
+
+riemann_state="ok"
+riemann_msg=""
+riemann_metric=1.0
+
+function write_msg {
+  riemann_msg="$1"
+  if [ "$#" -ge 2 ]; then
+    riemann_state="$2"
+  fi
+
+  if [ "$#" -ge 3 ]; then
+    riemann_metric=$3
+  fi
+  date=$(date -u +"%Y-%m-%d %H:%M:%SZ")
+  echo -e "[${date}] $1"
+}
+
+function redirect_output {
+  log_dir=$1
+  prefix=$2
+
+  mkdir -p $log_dir
+  chown -R vcap:vcap $log_dir
+
+  exec 1>> $log_dir/$prefix.stdout.log
+  exec 2>> $log_dir/$prefix.stderr.log
+}
+
+log_dir=/var/vcap/sys/log/$JOB_NAME
+redirect_output $log_dir $JOB_NAME
+
+write_msg "--- Starting job ---"
+
+LOAD1M="$(uptime | awk -F'load average:' '{ print $2 }' | cut -d, -f1 | sed 's/ //g')" # 1 min
+LOAD5M="$(uptime | awk -F'load average:' '{ print $2 }' | cut -d, -f2 | sed 's/ //g')" # 5 min
+LOAD15M="$(uptime | awk -F'load average:' '{ print $2 }' | cut -d, -f3 | sed 's/ //g')" # 15 min
+
+physicalID=$(less /proc/cpuinfo | grep "physical id" | sort|uniq | wc -l)
+coreID=$(less /proc/cpuinfo | grep "core id" | sort|uniq | wc -l)
+cores=$(($physicalID * $coreID))
+
+if [ "${LOAD15M%%.*}" -gt "${cores%%.*}" ]; then
+  write_msg "15 minutes load average crossed allowed limit $cores" "critical" $LOAD15M
+elif [ "${LOAD5M%%.*}" -gt "${cores%%.*}" ]; then
+  write_msg "5 minutes load average crossed allowed limit $cores" "warning" $LOAD5M
+else
+  write_msg "Load average seems OK" "ok" $LOAD1M
+fi
+
+<% if_p("riemann.host") do %>
+write_msg "Sending data to riemann: [$riemann_metric - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
+/var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost $JOB_NAME -eventService "<%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>"
+<% end %>
+
+write_msg "--- Stopping job ---"
