@@ -1,0 +1,59 @@
+---
+packages:
+- name: golang
+  version: !binary |-
+    NGMxYTQwOTEzNWIyNjRlMzllOGU2NzhiZTM3MjhkZjVkYTQ4YWFmNA==
+  fingerprint: !binary |-
+    NGMxYTQwOTEzNWIyNjRlMzllOGU2NzhiZTM3MjhkZjVkYTQ4YWFmNA==
+  sha1: !binary |-
+    ZWU1YTU4OTc3NTFhMDllYTI1M2NhNTQ0OWVjNTgyYzI1MmY0ZjJkMw==
+  dependencies: []
+- name: raidman
+  version: !binary |-
+    NWFmZDM3MTNhNTM1MDU0ZmZlOGJlMDU4NjE5NDRhYzRkZTZjYzM1OA==
+  fingerprint: !binary |-
+    NWFmZDM3MTNhNTM1MDU0ZmZlOGJlMDU4NjE5NDRhYzRkZTZjYzM1OA==
+  sha1: !binary |-
+    MjdhYWVhNTRlNDNhYzY5ZDFjNDkzYmE4YTZhZjMyZWU4MjMzYzNlYQ==
+  dependencies:
+  - golang
+jobs:
+- name: cc_load_check
+  version: !binary |-
+    Yzg4NGIxOGM1MjVlZjBjNGNhYzg1MjZiMTdkZGIzNDgxOWFjNmM4Mg==
+  fingerprint: !binary |-
+    Yzg4NGIxOGM1MjVlZjBjNGNhYzg1MjZiMTdkZGIzNDgxOWFjNmM4Mg==
+  sha1: !binary |-
+    YjVjYzk4ZTQxOGY2MTBhNDQ4Njc0MTRjOTJiNmI5YWU1MDBiNDkwYQ==
+- name: kernel_settings
+  version: !binary |-
+    ZGUwZGQ0ODY1NWMzNWI3MjdhYTQxZWIxNDMwZmUyMDNkODI3ZTQ3MA==
+  fingerprint: !binary |-
+    ZGUwZGQ0ODY1NWMzNWI3MjdhYTQxZWIxNDMwZmUyMDNkODI3ZTQ3MA==
+  sha1: !binary |-
+    ZjZlNzdlYTJhMjFjMWM2YjM1Yzg5NDA3YjY4ZmFkMmRkNTg0ZjZmOA==
+- name: logstash_redis_check
+  version: !binary |-
+    ZjE3YzUxNGQ0YmNhOWI4MmRiMjRjZjRhN2NiNDc0ZjIyZWFkMWM5ZQ==
+  fingerprint: !binary |-
+    ZjE3YzUxNGQ0YmNhOWI4MmRiMjRjZjRhN2NiNDc0ZjIyZWFkMWM5ZQ==
+  sha1: !binary |-
+    N2U0MTE5OTIxZWI3MGE1MTQ3Y2I3NDQ2Mzk2ZDMwMjhmMTJmOGY4YQ==
+- name: nf_conntrack
+  version: !binary |-
+    OTkyMmYzMzRiODk4ZTExMTVmMTBhY2M2YjUzYzAyN2E3YmVkM2YwZA==
+  fingerprint: !binary |-
+    OTkyMmYzMzRiODk4ZTExMTVmMTBhY2M2YjUzYzAyN2E3YmVkM2YwZA==
+  sha1: !binary |-
+    YzFiODYxZWJiN2VmOTg5ZTBkNTE3ODk4MDgzNTNiZGIzOTg4NTFlMQ==
+license:
+  version: !binary |-
+    NTY5YTQ4MTY2M2Y5NWIxMGNiODAzNTM5YmE2MWE4YzI0YTg4MTQ2Mw==
+  fingerprint: !binary |-
+    NTY5YTQ4MTY2M2Y5NWIxMGNiODAzNTM5YmE2MWE4YzI0YTg4MTQ2Mw==
+  sha1: !binary |-
+    NmJiYTlkMTg2NzcyZGI0YTk5YmRjMWE5YjE1NzQyMDg5MWJkZDU0Yg==
+commit_hash: 278196eb
+uncommitted_changes: true
+name: ops-tools
+version: 0.3.0
