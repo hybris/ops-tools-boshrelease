@@ -1,1 +1,3 @@
-<%= p('cron.schedule') %> /var/vcap/jobs/kernal_settings/bin/kernel_settings.sh
+<% if_p("udp_buffer_read.port_monitoring") do %>
+<%= p('cron.schedule') %> /var/vcap/jobs/kernel_settings/bin/kernel_settings_udp_buffer_read.sh
+<% end %>

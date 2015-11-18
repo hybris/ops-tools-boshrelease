@@ -1,13 +1,13 @@
 #!/bin/bash
 
 kernel_network_path="/proc/sys/net/"
-
+''
 # Read desired configuration
 kernel_parameters=(
-  tcp_tw_reuse,<%= p('ipv4.tcp.reuse') %>,ipv4,net.ipv4.tcp_tw_reuse
-  tcp_tw_recycle,<%= p('ipv4.tcp.recycle') %>,ipv4,net.ipv4.tcp_tw_recycle
-  tcp_fin_timeout,<%= p('ipv4.tcp.timeout') %>,ipv4,net.ipv4.tcp_fin_timeout
-  somaxconn,<%= p('core.somaxconn') %>,core,net.core.somaxconn
+  tcp_tw_reuse,0,ipv4,net.ipv4.tcp_tw_reuse
+  tcp_tw_recycle0,ipv4,net.ipv4.tcp_tw_recycle
+  tcp_fin_timeout,30,ipv4,net.ipv4.tcp_fin_timeout
+  somaxconn,128,core,net.core.somaxconn
 )
 
 # Validate setting
@@ -45,7 +45,7 @@ do
 done
 
 # Ulimit setup
-desired_ulimit="<%= p('system.ulimit') %>"
+desired_ulimit="1024"
 actual_ulimit=`ulimit -n`
 if [ "$desired_ulimit" != "$actual_ulimit" ]
 then

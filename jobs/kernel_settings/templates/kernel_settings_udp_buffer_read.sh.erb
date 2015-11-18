@@ -1,0 +1,66 @@
+#!/bin/bash
+
+#set -x
+set -e
+
+##### udp_monitor settings #####
+JOB_NAME="kernel_settings"
+upd_port="<%= p('udp_buffer_read.port_monitoring') %>"
+
+##### Logging setup #####
+function redirect_output {
+  log_dir=$1
+  prefix=$2
+
+  mkdir -p $log_dir
+  chown -R vcap:vcap $log_dir
+
+  exec 1>> $log_dir/$prefix.stdout.log
+  exec 2>> $log_dir/$prefix.stderr.log
+}
+log_dir=/var/vcap/sys/log/$JOB_NAME
+redirect_output $log_dir $JOB_NAME
+
+##### Write in log file #####
+function write_to_logs {
+  message=$1
+
+  date=$(date -u +"%Y-%m-%d %H:%M:%SZ")
+  echo -e "[${date}] $message"
+}
+
+##### sending to Riemann #####
+function send_metric {
+  riemann_state="$1"
+  riemann_msg="$2"
+  metric_name="$3"
+  metric_value="$4"
+
+  <% if p("riemann.host") %>
+  write_to_logs "Sending data to riemann: [$metric_name : $metric_value - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
+  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$metric_value" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost $JOB_NAME -eventService "<%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>.${metric_name}"
+  <% else %>
+  echo "<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>.$metric_name $metric_value `date +%s`" | nc -q0 <%= p("graphite.address") %>  <%= p("graphite.port") %>
+  <% end %>
+}
+
+##### reading upd stats #####
+function read_udp {
+
+  # convert decimal port to hexadecimal
+  hexa_port=`printf '%04x\n' ${upd_port}`
+  udp_stats=`cat /proc/net/udp | grep -i ${hexa_port} | awk '{print $2 "," $5 "," $13}'`
+
+  write_to_logs $udp_stats
+
+  # Send the metric
+  tx_queue=`echo ${udp_stats} | cut -d ',' -f2 | cut -d ':' -f1`
+  rx_queue=`echo ${udp_stats} | cut -d ',' -f2 | cut -d ':' -f1`
+  drops=`echo ${udp_stats} | cut -d ',' -f3`
+
+  send_metric "ok" "tx queue ok" "tx_queue" $tx_queue
+  send_metric "ok" "rx queue ok" "rx_queue" $rx_queue
+  send_metric "ok" "drops" "drops" $drops
+}
+
+read_udp
