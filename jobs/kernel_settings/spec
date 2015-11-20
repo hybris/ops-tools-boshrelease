@@ -11,15 +11,8 @@ properties:
   cron.schedule:
     description: "Schedule for the job (in cron format)"
     default: "0 * * * *"
-  kernel_settings.ipv4.tcp.recycle:
-    description: "Enable fast recycling TIME-WAIT sockets"
-  kernel_settings.ipv4.tcp.reuse:
-    description: "This allows reusing sockets in TIME_WAIT state for new connections when it is safe from protocol viewpoint"
-  kernel_settings.ipv4.tcp.timeout:
-    description: "Time to hold socket in state FIN-WAIT"
-  kernel_settings.core.somaxconn:
-    description: "Number of incoming connections"
-  kernel_settings.system.ulimit:
-    description: "Limit the use of system-wide resources"
-  udp_buffer_read.port_monitoring:
+  kernel_settings.udp_buffer_port_monitoring:
     description: "Port number in decimal of the port to monitor in udp buffer statistics"
+  kernel_settings.parameters:
+    description: List of kernel parameters to set (key -> value pair)
+    default: []

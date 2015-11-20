@@ -1,54 +1,80 @@
 #!/bin/bash
 
-kernel_network_path="/proc/sys/net/"
-''
-# Read desired configuration
-kernel_parameters=(
-  tcp_tw_reuse,0,ipv4,net.ipv4.tcp_tw_reuse
-  tcp_tw_recycle0,ipv4,net.ipv4.tcp_tw_recycle
-  tcp_fin_timeout,30,ipv4,net.ipv4.tcp_fin_timeout
-  somaxconn,128,core,net.core.somaxconn
-)
+set -u # report the usage of uninitialized variables
 
-# Validate setting
-setting_validation() {
-   setting_name=`echo $1 | cut -d ',' -f1`
-   setting_value=`echo $1 | cut -d ',' -f2`
-   setting_group=`echo $1 | cut -d ',' -f3`
-   actual_value=`cat ${kernel_network_path}/${setting_group}/${setting_name}`
+JOB_NAME="kernel_settings"
 
-   if [ $actual_value == $setting_value ]
-   then
-     echo "ok"
-   else
-     echo "change_required"
-   fi
+function write_msg {
+  message=$1
+  date=$(date -u +"%Y-%m-%d %H:%M:%SZ")
+  echo -e "[${date}] $message"
 }
 
-# Set setting to desired value
-set_kernel_setting() {
-  setting_value=`echo $1 | cut -d ',' -f2`
-  setting_kernel_name=`echo $1 | cut -d ',' -f4`
+function redirect_output {
+  log_dir=$1
+  prefix=$2
 
-  echo "Setting ${setting_kernel_name} to ${setting_value}"
-  sudo sysctl -w ${setting_kernel_name}=${setting_value}
+  mkdir -p $log_dir
+  chown -R vcap:vcap $log_dir
+
+  exec 1>> $log_dir/$prefix.stdout.log
+  exec 2>> $log_dir/$prefix.stderr.log
+}
+log_dir=/var/vcap/sys/log/$JOB_NAME
+redirect_output $log_dir $JOB_NAME
+
+function read_actual_parameter_value {
+  parameter_name=$1
+
+  # validation
+  if [ "x" == "x${parameter_name}" ]
+  then
+     write_msg "ERROR: No parameter name defined for lookup"
+    exit 1
+  else
+    parameter_value=`sysctl -n ${parameter_name}`
+    echo $parameter_value
+  fi
 }
 
-# Execution
-for setting in "${kernel_parameters[@]}"
-do
- action="$(setting_validation $setting)"
- if [ "$action" == "change_required" ]
- then
-   set_kernel_setting $setting
+function set_parameter_value {
+  parameter_name=$1
+  parameter_value=$2
+
+  # validation
+  if [ "x" == "x${parameter_name}" ]
+  then
+    write_msg "ERROR: No parameter name defined"
+    exit 1
+  fi
+  if [ "x" == "x${parameter_value}" ]
+  then
+    write_msg "ERROR: No parameter value defined"
+    exit 1
+  fi
+
+  # setting parameter value if not ok
+  actual_parameter_value=`read_actual_parameter_value "$parameter_name"`
+  write_msg "${parameter_name} actual: $actual_parameter_value"
+  write_msg "${parameter_name} new   : $parameter_value"
+
+  if [ "${actual_parameter_value}" != "${parameter_value}" ]
+  then
+    new_parameter_value=`/sbin/sysctl -w ${parameter_name}="${parameter_value}"`
+
+    # validation
+    if [ $? -ne 0 ]
+    then
+      write_msg "ERROR: Not able to set kernel parameter: ${parameter_name} with value: ${parameter_value}"
+      exit 1
+    else
+      write_msg "Set kernel parameter:    ${parameter_name} = ${parameter_value}"
+    fi
+  else
+   write_msg "INFO: Kernel parameter is already at the desired value: ${parameter_name} -> ${parameter_value}"
  fi
-done
+}
 
-# Ulimit setup
-desired_ulimit="1024"
-actual_ulimit=`ulimit -n`
-if [ "$desired_ulimit" != "$actual_ulimit" ]
-then
-  echo "Ulimit need to be changed to: $desired_ulimit"
-  ulimit -n ${desired_ulimit}
-fi
+<% p("kernel_settings.parameters").each do |parameter_config| %>
+set_parameter_value <%= parameter_config['name'] %> <%= parameter_config['value'] %>
+<% end %>

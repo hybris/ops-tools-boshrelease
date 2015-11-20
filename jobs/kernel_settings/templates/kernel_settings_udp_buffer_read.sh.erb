@@ -5,7 +5,7 @@ set -e
 
 ##### udp_monitor settings #####
 JOB_NAME="kernel_settings"
-upd_port="<%= p('udp_buffer_read.port_monitoring') %>"
+upd_port="<%= p('kernel_settings.udp_buffer_port_monitoring') %>"
 
 ##### Logging setup #####
 function redirect_output {
