@@ -23,6 +23,3 @@ jobs:
 networks: (( merge ))
 
 properties:
-   riemann:
-    host: localhost
-    port: 2003

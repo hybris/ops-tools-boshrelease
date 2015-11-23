@@ -25,7 +25,9 @@ properties:
     description: "Timeout in seconds to connect to redis"
     default: 15
   riemann.host:
-    description: "Riemann host use to sent alerts"
+    description: "Riemann host use to sent metrics"
+  riemann.port:
+    description: "Riemann port use to sent metrics"
   riemann.suffix:
     description: "Suffix for the riemann host"
     default: operational-tools

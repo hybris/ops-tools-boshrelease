@@ -36,11 +36,9 @@ function send_metric {
   metric_name="$3"
   metric_value="$4"
 
-  <% if p("riemann.host") %>
+  <% if_p("riemann.host") do %>
   write_to_logs "Sending data to riemann: [$metric_name : $metric_value - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
-  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$metric_value" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost $JOB_NAME -eventService "<%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>.${metric_name}"
-  <% else %>
-  echo "<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>.$metric_name $metric_value `date +%s`" | nc -q0 <%= p("graphite.address") %>  <%= p("graphite.port") %>
+  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.<%= spec.job.name %>.<%= spec.index %>"
   <% end %>
 }
 

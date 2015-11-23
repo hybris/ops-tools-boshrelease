@@ -11,6 +11,13 @@ properties:
   cron.schedule:
     description: "Schedule for the job (in cron format)"
     default: "0 * * * *"
+  riemann.host:
+    description: "Riemann host use to sent metrics"
+  riemann.port:
+    description: "Riemann port use to sent metrics"
+  riemann.suffix:
+    description: "Suffix for the riemann host"
+    default: operational-tools
   kernel_settings.udp_buffer_port_monitoring:
     description: "Port number in decimal of the port to monitor in udp buffer statistics"
   kernel_settings.parameters:
