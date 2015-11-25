@@ -30,7 +30,7 @@ function send_metric_to_graphite {
 
   write_to_logs "Sending to graphite: <%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>.$metric_name $metric_value `date +%s`"
   <% if_p("riemann.host") do %>
-  echo "<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>.$metric_name $metric_value `date +%s`" | nc -q0 <%= p("riemann.host") %>  <%= p("riemann.port") %>
+  echo "<%= spec.deployment %>.${JOB_NAME}.<%= spec.job.name %>.<%= spec.index %>.$metric_name $metric_value `date +%s`" | nc -q0 <%= p("riemann.host") %>  <%= p("riemann.port") %>
   <% end %>
 }
 
@@ -116,7 +116,7 @@ function nf_conntrack_max_check {
 
   <% if_p("riemann.host") do %>
   write_to_logs "Sending data to riemann: [$riemann_metric - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
-  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.<%= spec.job.name %>.<%= spec.index %>"
+  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.${JOB_NAME}.<%= spec.job.name %>.<%= spec.index %>"
   <% end %>
 }
 

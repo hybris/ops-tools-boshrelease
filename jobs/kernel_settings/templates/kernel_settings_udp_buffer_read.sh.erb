@@ -4,7 +4,7 @@
 set -e
 
 ##### udp_monitor settings #####
-JOB_NAME="kernel_settings"
+JOB_NAME="kernel_settings_udp"
 upd_port="<%= p('kernel_settings.udp_buffer_port_monitoring') %>"
 
 ##### Logging setup #####
@@ -38,7 +38,7 @@ function send_metric {
 
   <% if_p("riemann.host") do %>
   write_to_logs "Sending data to riemann: [$metric_name : $metric_value - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
-  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.<%= spec.job.name %>.<%= spec.index %>"
+  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$metric_value" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.${JOB_NAME}.<%= spec.job.name %>.<%= spec.index %>.$metric_name"
   <% end %>
 }
 
