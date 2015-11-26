@@ -98,10 +98,10 @@ function nf_conntrack_max_check {
   	nf_current=$(cat /proc/sys/net/netfilter/nf_conntrack_count || echo "not_there")
   	nf_max=$(cat /proc/sys/net/netfilter/nf_conntrack_max || echo "not_there")
   	nf_ratio=<%= p('nf_conntrack.check_ratio') %>
-    nf_calc=$(bc -l <<< "scale=10; $nf_ratio * $nf_max")
-    nf_status=$(bc -l <<< "$nf_current>$nf_calc")
+    nf_calc=$(($nf_ratio * $nf_max))
+    nf_current_calc=$(($nf_current * 100 ))
 
-    if [ $nf_status -eq 0 ]; then
+    if [ $nf_current_calc > $nf_calc ]; then
             write_to_logs "NF Conntrack is within limits: $nf_current < $nf_max"
             riemann_msg="NF Conntrack is within limits"
             riemann_state="ok"
