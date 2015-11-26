@@ -37,4 +37,4 @@ properties:
     default: operational-tools
   nf_conntrack.check_ratio:
     description: "Ratio used for the alert."
-    default: 0.9
+    default: 90
