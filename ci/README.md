@@ -7,7 +7,7 @@ Setup pipeline in Concourse
 ---------------------------
 
 ```
-fly -t snw c -c pipeline.yml --vars-from credentials.yml ops-tools-boshrelease --paused=false
+./bin/update_pipeline.sh
 ```
 
 Building/updating the base Docker image for tasks
