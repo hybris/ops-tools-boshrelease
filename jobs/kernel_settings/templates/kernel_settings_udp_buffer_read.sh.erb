@@ -53,7 +53,7 @@ function read_udp {
 
   # Send the metric
   tx_queue=`echo ${udp_stats} | cut -d ',' -f2 | cut -d ':' -f1`
-  rx_queue=`echo ${udp_stats} | cut -d ',' -f2 | cut -d ':' -f1`
+  rx_queue=`echo ${udp_stats} | cut -d ',' -f2 | cut -d ':' -f2`
   drops=`echo ${udp_stats} | cut -d ',' -f3`
 
   send_metric "ok" "tx queue ok" "tx_queue" $tx_queue
