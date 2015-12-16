@@ -77,14 +77,17 @@ function set_parameter_value {
 
 function send_metric {
   parameter_name="$1"
-  parameter_value=""
+  parameter_value="$2"
   riemann_state="ok"
   riemann_msg="Sending kernel parameter value"
 
-  actual_parameter_value=`read_actual_parameter_value "$parameter_name"`
+  if [ "x${parameter_value}" == "x" ]
+  then
+  parameter_value=`read_actual_parameter_value "$parameter_name"`
+  fi
 
   <% if_p("riemann.host") do %>
-  write_to_logs "Sending data to riemann: [$parameter_name : $parameter_value - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
+  write_msg "Sending data to riemann: [$parameter_name : $parameter_value - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
   /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$parameter_value" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.<%= spec.job.name %>.<%= spec.index %>.${JOB_NAME}.${parameter_name}"
   <% end %>
 }
@@ -93,6 +96,9 @@ function send_metric {
 <% p("kernel_settings.parameters").each do |parameter_config| %>
 set_parameter_value <%= parameter_config['name'] %> <%= parameter_config['value'] %>
 <% if parameter_config['metric'] %>
-send_metric <%= parameter_config['name'] %>
+send_metric <%= parameter_config['name'] %> ""
 <% end %>
 <% end %>
+
+# Sending global count of connections in the queue
+send_metric connection_queue `netstat -an | grep -c SYN_RECV`

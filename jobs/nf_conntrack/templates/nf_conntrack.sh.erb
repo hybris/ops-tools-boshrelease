@@ -117,6 +117,7 @@ function nf_conntrack_max_check {
   <% if_p("riemann.host") do %>
   write_to_logs "Sending data to riemann: [$riemann_metric - $riemann_state - $riemann_msg - $JOB_NAME - <%= p("riemann.suffix") %>.<%= spec.deployment %>.<%= spec.job.name %>.<%= spec.index %>]"
   /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$riemann_metric" -eventState "$riemann_state" -eventMessage "$riemann_msg" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.<%= spec.job.name %>.<%= spec.index %>.${JOB_NAME}.current"
+  /var/vcap/packages/raidman/bin/raidman -riemannHost <%= p("riemann.host") %> -eventMetric "$nf_max" -eventState "ok" -eventMessage "NF Conntrack max value" -eventHost <%= spec.deployment %> -eventService "<%= p("riemann.suffix") %>.<%= spec.job.name %>.<%= spec.index %>.${JOB_NAME}.max"
   <% end %>
 }
 
