@@ -61,4 +61,43 @@ function read_udp {
   send_metric "ok" "drops" "drops" $drops
 }
 
+##### reading udp stats from snmp proc file
+function read_udp_snmp {
+
+  udp_snmp_stats=`cat /proc/net/snmp | grep Udp | grep -v Lite | grep -v InDatagrams | awk '{print $1 "," $2 "," $3 "," $4 "," $5 "," $6 "," $7 "," $8 "," $9}'`
+
+  # Write raw udp snmp stats to logs
+  write_to_logs $udp_snmp_stats
+
+  # Calculation of drop percentage
+  indatagrams=`echo $udp_snmp_stats | cut -d ',' -f2`
+  noports=`echo $udp_snmp_stats | cut -d ',' -f3`
+  inerrors=`echo $udp_snmp_stats | cut -d ',' -f4`
+  outdatagrams=`echo $udp_snmp_stats | cut -d ',' -f5`
+  rcvbuferrors=`echo $udp_snmp_stats | cut -d ',' -f6`
+  sndbuferrors=`echo $udp_snmp_stats | cut -d ',' -f7`
+  incsumerrors=`echo $udp_snmp_stats | cut -d ',' -f8`
+  ingoredmulti=`echo $udp_snmp_stats | cut -d ',' -f9`
+  drop_rate=`echo $(( 100 / (${indatagrams} + ${inerrors}) * ${inerrors} ))`
+
+  # Send the metric
+  send_metric "ok" "indatagrams" "indatagrams" $indatagrams
+  send_metric "ok" "noports" "noports" $noports
+  send_metric "ok" "inerrors" "inerrors" $inerrors
+  send_metric "ok" "outdatagrams" "outdatagrams" $outdatagrams
+  send_metric "ok" "rcvbuferrors" "rcvbuferrors" $rcvbuferrors
+  send_metric "ok" "sndbuferrors" "sndbuferrors" $sndbuferrors
+  send_metric "ok" "incsumerrors" "incsumerrors" $incsumerrors
+  send_metric "ok" "ingoredmulti" "ingoredmulti" $ingoredmulti
+
+  if [ $drop_rate -ge 0 ]
+  then
+   send_metric "ok" "drop_rate" "drop_rate" $drop_rate
+  else
+    write_to_logs "ERROR: Unable to calculate drop_rate"
+    exit 1
+  fi
+}
+
 read_udp
+read_udp_snmp
