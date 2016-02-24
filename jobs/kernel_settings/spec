@@ -23,3 +23,6 @@ properties:
   kernel_settings.parameters:
     description: List of kernel parameters to set (key -> value pair)
     default: []
+  kernel_settings.files:
+    description: List of files path and value to set
+    default: []

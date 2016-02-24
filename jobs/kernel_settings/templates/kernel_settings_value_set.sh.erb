@@ -66,7 +66,6 @@ function set_parameter_value {
     if [ $? -ne 0 ]
     then
       write_msg "ERROR: Not able to set kernel parameter: ${parameter_name} with value: ${parameter_value}"
-      exit 1
     else
       write_msg "Set kernel parameter:    ${parameter_name} = ${parameter_value}"
     fi
@@ -92,12 +91,76 @@ function send_metric {
   <% end %>
 }
 
+function set_configuration_file_content {
+  configuration_path=$1
+  configuration_value=$2
+  configuration_type=$3
+
+  # validation
+  if [ "x" == "x${configuration_path}" ]
+  then
+    write_msg "ERROR: No configuration file path defined"
+    exit 1
+  fi
+  if [ "x" == "x${configuration_value}" ]
+  then
+    write_msg "ERROR: No configuration file content defined"
+    exit 1
+  fi
+  if [ "x" == "x${configuration_type}" ]
+  then
+    configuration_type="overwrite"
+  fi
+
+  # copy of the existing file???
+
+  # Set configuration file content
+  if [ -f ${configuration_path} ]
+  then
+
+    if [ "${configuration_type}" == "overwrite" ]
+    then
+      write_msg "Setting ${configuration_path} to : $configuration_value"
+      grep -qP "^${configuration_value}$" ${configuration_path} || /bin/echo "${configuration_value}" > ${configuration_path}
+
+      # validation
+      if [ $? -ne 0 ]
+      then
+        write_msg "ERROR: Not able to set configuration file: ${configuration_path} with value: ${configuration_value}"
+      else
+        write_msg "Successfully set ${configuration_path} to : ${configuration_value}"
+      fi
+    elif [ "${configuration_type}" == "append" ]
+    then
+      write_msg "Setting ${configuration_path} to : $configuration_value"
+      /bin/echo "${configuration_value}" >> ${configuration_path}
+
+      # validation
+      if [ $? -ne 0 ]
+      then
+        write_msg "ERROR: Not able to set configuration file: ${configuration_path} with value: ${configuration_value}"
+      else
+        write_msg "Successfully set ${configuration_path} to : ${configuration_value}"
+      fi
+    else
+      write_msg "ERROR: wrong configuration type: ${configuration_type}"
+    fi
+  else
+   write_msg "ERROR: configuration file at ${configuration_path} does not exists"
+  fi
+}
+
 # set parameter via sysctl
 <% p("kernel_settings.parameters").each do |parameter_config| %>
 set_parameter_value <%= parameter_config['name'] %> <%= parameter_config['value'] %>
 <% if parameter_config['metric'] %>
 send_metric <%= parameter_config['name'] %> ""
 <% end %>
+<% end %>
+
+# set configuration file value
+<% p("kernel_settings.files").each do |parameter_config| %>
+set_configuration_file_content <%= parameter_config['name'] %> <%= parameter_config['value'] %> <%= parameter_config['type'] %>
 <% end %>
 
 # Sending global count of connections in the queue
